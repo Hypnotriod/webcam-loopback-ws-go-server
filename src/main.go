@@ -36,10 +36,6 @@ func startHTTPServer() {
 	}
 }
 
-func home(w http.ResponseWriter, r *http.Request) {
-	w.Write([]byte("Hello"))
-}
-
 func serveWSRequest(w http.ResponseWriter, r *http.Request) {
 	conn, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
