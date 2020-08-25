@@ -1,8 +1,8 @@
 # webcam-loopback-ws-go-server
 Test webcam video loopback WebSocket server based on gorilla/websocket library written in `go`, configured for `VSCode`  
+Check for the `-address` param in `lauch.json`  
 
 ## Lauch (Go plugin required)
-Check for the `-address` param in `lauch.json`  
 `VSCode` -> `Ctrl + Shift + D`:  
-* **Launch Debug** - to launch with HTTP  
-* **Launch Debug TLS** - to launch with HTTPS  
+* **Launch Debug** - to launch with HTTP (http://localhost:7777)  
+* **Launch Debug TLS** - to launch with HTTPS (https://localhost:7777)   
