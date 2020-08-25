@@ -15,24 +15,21 @@ var upgrader = websocket.Upgrader{
 }
 
 func main() {
-	startHTTPServer()
-}
-
-func startHTTPServer() {
 	key := flag.String("key", "", "path to TLS key.pem")
 	cert := flag.String("cert", "", "path to TLS cert.pem")
 	address := flag.String("address", ":8080", "address, default is :8080")
 	flag.Parse()
 
-	http.Handle(
-		"/",
-		http.StripPrefix("/", http.FileServer(http.Dir("./public"))),
-	)
+	startHTTPServer(*address, *cert, *key)
+}
+
+func startHTTPServer(address string, cert string, key string) {
+	http.Handle("/", http.FileServer(http.Dir("./public")))
 	http.HandleFunc("/ws", serveWSRequest)
-	if len(*key) > 0 && len(*cert) > 0 {
-		http.ListenAndServeTLS(*address, *cert, *key, nil)
+	if len(key) > 0 && len(cert) > 0 {
+		http.ListenAndServeTLS(address, cert, key, nil)
 	} else {
-		http.ListenAndServe(*address, nil)
+		http.ListenAndServe(address, nil)
 	}
 }
 
