@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+	<style>
+		html,
+		body,
+		div,
+		video {
+			margin: 0;
+			padding: 0;
+		}
+
+		video {
+			display: block;
+			width: 50vw;
+			height: 100vh;
+			background-color: #000;
+			line-height: 0;
+		}
+
+		.wrapper {
+			display: flex;
+			flex-direction: row;
+			justify-content: center;
+			align-items: center;
+		}
+
+		@media (orientation: landscape) {
+			video {
+				width: 50vw;
+				height: 100vh;
+			}
+
+			.wrapper {
+				flex-direction: row;
+			}
+		}
+
+		@media (orientation: portrait) {
+			video {
+				width: 100vw;
+				height: 50vh;
+			}
+
+			.wrapper {
+				flex-direction: column;
+			}
+		}
+	</style>
+
+</head>
+
+<body>
+	<div class="wrapper">
+		<video id="video_input"></video>
+		<video id="video_output"></video>
+	</div>
+
+	<script>
+		const SERVER_WS_URL
+			= (window.location.protocol === "https:" ? "wss:" : "ws:")
+			+ `//${window.location.hostname}:${window.location.port}/ws`;
+		const VIDEO_BITS_PER_SECOND = 128000;
+		const VIDEO_TIME_SLICE_MS = 100;
+		const VIDEO_TYPE_FORMATS = [
+			"video/webm",
+			"video/webm;codecs=vp9",
+			"video/webm;codecs=vp8",
+			"video/webm;codecs=vp9.0",
+			"video/webm;codecs=vp8.0",
+			"video/webm;codecs=h264",
+			"video/webm;codecs=H264",
+			"video/webm;codecs=avc1",
+			"video/webm;codecs=vp9,opus",
+			"video/webm;codecs=vp8,vp9,opus",
+			"video/webm;codecs=vp8,opus",
+			"video/WEBM;codecs=VP8,OPUS",
+			"video/webm;codecs=h264,opus",
+			"video/webm;codecs=h264,vp9,opus",
+			"video/x-matroska;codecs=avc1",
+		];
+
+		navigator.getUserMedia = navigator.getUserMedia || navigator.webkitGetUserMedia || navigator.mozGetUserMedia || navigator.msGetUserMedia;
+		window.URL = window.URL || window.webkitURL;
+
+		const videoIn = document.getElementById("video_input");
+		const videoOut = document.getElementById("video_output");
+		const mediaSource = new MediaSource();
+		const fileReader = new FileReader();
+		const chunksBuffer = [];
+		const videoFormat = getVideoFormat();
+		let webSocket = null;
+		let sourceBuffer = null;
+		let mediaRecorder = null;
+
+		document.onvisibilitychange = onDocumantVisibilityChange;
+
+		videoIn.onloadeddata = e => videoIn.play();
+		navigator.getUserMedia({ video: true }, onUserMedia, console.log);
+
+		function initWebsocket() {
+			try {
+				webSocket = new WebSocket(SERVER_WS_URL);
+				webSocket.onopen = onWebSocketOpen;
+				webSocket.onclose = onWebSocketClose;
+				webSocket.onmessage = onWebSocketMessage;
+			} catch (e) {
+				console.log(e);
+			}
+		}
+
+		function onWebSocketOpen(e) {
+			console.log("Connected to WS Server.");
+		}
+
+		function onWebSocketClose(e) {
+			console.log("Connection closed.");
+		}
+
+		function onWebSocketMessage(e) {
+			if (e.data instanceof Blob === false) {
+				return;
+			}
+			if (sourceBuffer.updating
+				|| chunksBuffer.length > 0
+				|| fileReader.readyState === FileReader.LOADING) {
+				chunksBuffer.push(e.data);
+			} else {
+				fileReader.readAsArrayBuffer(e.data);
+			}
+		}
+
+		function onWebSocketError(e) {
+			console.error(e);
+		}
+
+		function onUserMedia(stream) {
+			videoIn.srcObject = stream;
+
+			if (!videoFormat) {
+				console.log("No Any of video formats supported!");
+				return;
+			}
+
+			videoOut.src = URL.createObjectURL(mediaSource);
+			mediaSource.onsourceopen = onMediaSourceOpen;
+
+			initWebsocket();
+		}
+
+		function onMediaSourceOpen() {
+			sourceBuffer = mediaSource.addSourceBuffer(videoFormat);
+			sourceBuffer.onupdate = onSourceBufferUpdate;
+			fileReader.onload = onFileReaderLoad;
+
+			mediaRecorder = new MediaRecorder(videoIn.srcObject,
+				{
+					videoBitsPerSecond: VIDEO_BITS_PER_SECOND,
+					mimeType: videoFormat,
+				});
+			mediaRecorder.ondataavailable = onMediaRecorderDataAvailable;
+			mediaRecorder.start(VIDEO_TIME_SLICE_MS);
+
+			videoOut.play();
+		}
+
+		function onFileReaderLoad() {
+			sourceBuffer.appendBuffer(fileReader.result);
+		}
+
+		function onMediaRecorderDataAvailable(e) {
+			if (webSocket && webSocket.readyState === WebSocket.OPEN) {
+				webSocket.send(e.data);
+			}
+		}
+
+		function onSourceBufferUpdate() {
+			if (chunksBuffer.length > 0
+				&& !sourceBuffer.updating
+				&& fileReader.readyState !== FileReader.LOADING) {
+				fileReader.readAsArrayBuffer(chunksBuffer.shift());
+			}
+		}
+
+		function getVideoFormat() {
+			for (let format of VIDEO_TYPE_FORMATS) {
+				if (MediaSource.isTypeSupported(format)) {
+					return format;
+				}
+			}
+			return null;
+		}
+
+		function onDocumantVisibilityChange(e) {
+			if (document.visibilityState === "visible") {
+				setTimeout(() => {
+					videoOut.currentTime = Number.MAX_SAFE_INTEGER;
+				}, 0);
+			}
+		}
+	</script>
+
+</body>
+
+</html>

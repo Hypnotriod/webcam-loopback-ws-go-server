@@ -1,0 +1,38 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Launch Debug",
+            "type": "go",
+            "request": "launch",
+            "mode": "auto",
+            "program": "${workspaceFolder}/src",
+            "env": {},
+            "args": [
+                "-address=:7777"
+            ]
+        },
+        {
+            "name": "Launch Debug TLS",
+            "type": "go",
+            "request": "launch",
+            "mode": "auto",
+            "program": "${workspaceFolder}/src",
+            "env": {},
+            "args": [
+                "-address=:7777",
+                "-cert=private/cert.pem",
+                "-key=private/key.pem"
+            ]
+        },
+        {
+            "name": "Attach Debug",
+            "type": "go",
+            "request": "attach",
+            "mode": "remote",
+            "remotePath": "${workspaceFolder}/src",
+            "port": 2340,
+            "host": "127.0.0.1"
+        }
+    ]
+}
