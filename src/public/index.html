@@ -93,6 +93,7 @@
 		let webSocket = null;
 		let sourceBuffer = null;
 		let mediaRecorder = null;
+		let isHidden = false;
 
 		document.onvisibilitychange = onDocumantVisibilityChange;
 
@@ -167,6 +168,9 @@
 
 		function onFileReaderLoad() {
 			sourceBuffer.appendBuffer(fileReader.result);
+			if (isHidden) {
+				videoOut.currentTime = Number.MAX_SAFE_INTEGER;
+			}
 		}
 
 		function onMediaRecorderDataAvailable(e) {
@@ -193,11 +197,7 @@
 		}
 
 		function onDocumantVisibilityChange(e) {
-			if (document.visibilityState === "visible") {
-				setTimeout(() => {
-					videoOut.currentTime = Number.MAX_SAFE_INTEGER;
-				}, 0);
-			}
+			isHidden = document.visibilityState === "hidden";
 		}
 	</script>
 
