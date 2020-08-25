@@ -30,7 +30,7 @@ func startHTTPServer() {
 	)
 	http.HandleFunc("/ws", serveWSRequest)
 	if len(*key) > 0 && len(*cert) > 0 {
-		http.ListenAndServeTLS(*address, "private/cert.pem", "private/key.pem", nil)
+		http.ListenAndServeTLS(*address, *cert, *key, nil)
 	} else {
 		http.ListenAndServe(*address, nil)
 	}
