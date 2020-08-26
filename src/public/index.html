@@ -188,12 +188,7 @@
 		}
 
 		function getVideoFormat() {
-			for (let format of VIDEO_TYPE_FORMATS) {
-				if (MediaSource.isTypeSupported(format)) {
-					return format;
-				}
-			}
-			return null;
+			return VIDEO_TYPE_FORMATS.find(MediaSource.isTypeSupported);
 		}
 
 		function onDocumantVisibilityChange(e) {
