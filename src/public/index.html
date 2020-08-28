@@ -94,8 +94,12 @@
 		let sourceBuffer = null;
 		let mediaRecorder = null;
 
-		videoIn.onloadeddata = e => videoIn.play();
-		navigator.getUserMedia({ video: true }, onUserMedia, console.log);
+		if (navigator.getUserMedia) {
+			videoIn.onloadeddata = e => videoIn.play();
+			navigator.getUserMedia({ video: true }, onUserMedia, console.log);
+		} else {
+			console.log("User Media is not supperted!");
+		}
 
 		function initWebsocket() {
 			try {
@@ -104,16 +108,16 @@
 				webSocket.onclose = onWebSocketClose;
 				webSocket.onmessage = onWebSocketMessage;
 			} catch (e) {
-				console.log(e);
+				console.log("WebSocket error:", e);
 			}
 		}
 
 		function onWebSocketOpen(e) {
-			console.log("Connected to WS Server.");
+			console.log("WebSocket connection established.");
 		}
 
 		function onWebSocketClose(e) {
-			console.log("Connection closed.");
+			console.log("WebSocket connection closed.");
 		}
 
 		function onWebSocketMessage(e) {
@@ -130,7 +134,7 @@
 		}
 
 		function onWebSocketError(e) {
-			console.error(e);
+			console.log("Websocket error:", e);
 		}
 
 		function onUserMedia(stream) {
