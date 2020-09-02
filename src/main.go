@@ -24,12 +24,13 @@ func main() {
 }
 
 func startHTTPServer(address string, cert string, key string) {
+	server := &http.Server{Addr: address}
 	http.Handle("/", http.FileServer(http.Dir("./public")))
 	http.HandleFunc("/ws", serveWSRequest)
 	if len(key) > 0 && len(cert) > 0 {
-		http.ListenAndServeTLS(address, cert, key, nil)
+		server.ListenAndServeTLS(cert, key)
 	} else {
-		http.ListenAndServe(address, nil)
+		server.ListenAndServe()
 	}
 }
 
