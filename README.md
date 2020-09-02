@@ -10,6 +10,9 @@ Check for the `-address` param in `lauch.json`
 
     openssl req -x509 -nodes -days 365 -newkey rsa:2048 -keyout key.pem -out cert.pem
 
+### Delve debugger
+* (go-delve)[https://github.com/go-delve/delve]
+
 ## Lauch (Go plugin required)
 
 `VSCode` -> `Ctrl + Shift + D`:  
